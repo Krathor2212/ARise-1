@@ -1,16 +1,20 @@
-const express = require('express');
-const dotenv = require('dotenv');
+import express from 'express';
+import connectDB from './config/db.js';
+import authRoutes from './routes/authRoutes.js';
+import dotenv from 'dotenv';
 
-// Load environment variables from .env file
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 3000;
 
-app.get('/', (req, res) => {
-  res.send('Hello, World!');
-});
+// Connect MongoDB
+connectDB();
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+// Middleware
+app.use(express.json());
+
+// Routes
+app.use('/auth', authRoutes);
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
