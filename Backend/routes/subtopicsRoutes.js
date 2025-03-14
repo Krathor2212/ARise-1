@@ -3,7 +3,6 @@ import Topic from '../models/Topic.js';
 
 const router = express.Router();
 
-// Recursive function to extract all subtopics including nested ones
 const extractSubtopics = (subtopics) => {
     let titles = [];
     for (const subtopic of subtopics) {
@@ -15,13 +14,9 @@ const extractSubtopics = (subtopics) => {
     return titles;
 };
 
-// Route to get all subtopics from all topics (grouped by topic)
 router.get('/', async (req, res) => {
     try {
-        // Fetch all topics
         const topics = await Topic.find({});
-
-        // Extract subtopics separately for each topic
         const allSubtopics = topics.map(topic => ({
             title: topic.title,
             subtopics: extractSubtopics(topic.subtopics)
@@ -33,20 +28,17 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Route to get subtopics of a specific topic by title
 router.get('/:title', async (req, res) => {
     try {
         const { title } = req.params;
         const decodedTitle = decodeURIComponent(title);
 
-        // Find the topic by title
         const topic = await Topic.findOne({ title: decodedTitle });
 
         if (!topic) {
             return res.status(404).json({ message: 'Topic not found' });
         }
 
-        // Extract subtopics (including nested ones)
         const subtopics = extractSubtopics(topic.subtopics);
 
         res.json({ title: topic.title, subtopics });
