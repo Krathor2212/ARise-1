@@ -1,4 +1,4 @@
-import express from 'express';
+
 import Topic from '../models/Topic.js'; 
 
 const router = express.Router();
