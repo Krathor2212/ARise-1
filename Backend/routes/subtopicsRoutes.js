@@ -3,22 +3,53 @@ import Topic from '../models/Topic.js';
 
 const router = express.Router();
 
-// Route to get subtopics for a given topic
-router.get('/:topicTitle', async (req, res) => {
+// Recursive function to extract all subtopics including nested ones
+const extractSubtopics = (subtopics) => {
+    let titles = [];
+    for (const subtopic of subtopics) {
+        titles.push(subtopic.title);
+        if (subtopic.subtopics && subtopic.subtopics.length > 0) {
+            titles = titles.concat(extractSubtopics(subtopic.subtopics));
+        }
+    }
+    return titles;
+};
+
+// Route to get all subtopics from all topics (grouped by topic)
+router.get('/', async (req, res) => {
     try {
-        const { topicTitle } = req.params;
+        // Fetch all topics
+        const topics = await Topic.find({});
 
-        // Decode URL encoding (e.g., "1.3%20Stacks" -> "1.3 Stacks")
-        const decodedTitle = decodeURIComponent(topicTitle);
+        // Extract subtopics separately for each topic
+        const allSubtopics = topics.map(topic => ({
+            title: topic.title,
+            subtopics: extractSubtopics(topic.subtopics)
+        }));
 
-        // Find the topic
+        res.json({ topics: allSubtopics });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// Route to get subtopics of a specific topic by title
+router.get('/:title', async (req, res) => {
+    try {
+        const { title } = req.params;
+        const decodedTitle = decodeURIComponent(title);
+
+        // Find the topic by title
         const topic = await Topic.findOne({ title: decodedTitle });
 
         if (!topic) {
             return res.status(404).json({ message: 'Topic not found' });
         }
 
-        res.json({ subtopics: topic.content || [] });
+        // Extract subtopics (including nested ones)
+        const subtopics = extractSubtopics(topic.subtopics);
+
+        res.json({ title: topic.title, subtopics });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
