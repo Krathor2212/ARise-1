@@ -1,12 +1,11 @@
 import express from 'express';
-import Topic from '../models/Topic.js'; // Correct model
+import Topic from '../models/Topic.js';
 
 const router = express.Router();
 
-// Route to get all topics (only titles)
 router.get('/', async (req, res) => {
     try {
-        const topics = await Topic.find({}, 'title'); // Fetch only the title
+        const topics = await Topic.find({}, 'title'); 
         res.json({ topics });
     } catch (error) {
         res.status(500).json({ message: error.message });
