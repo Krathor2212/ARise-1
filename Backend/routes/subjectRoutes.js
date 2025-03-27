@@ -4,6 +4,15 @@ import mongoose from 'mongoose';
 
 const router = express.Router();
 
+const SectionSchema = new mongoose.Schema({
+    title: String,
+    content: [String] 
+});
+
+const ChapterSchema = new mongoose.Schema({
+    sections: [SectionSchema] 
+});
+
 router.get('/', async (req, res) => { 
     try {
         const subjects = await Subject.find();
@@ -36,6 +45,46 @@ router.get('/', async (req, res) => {
 
         res.json(results);
 
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+});
+
+router.get('/:subjectName/:chapter', async (req, res) => {
+    try {
+        const chapterName = req.params.chapter.trim();
+
+        const ChapterModel =
+               mongoose.model(chapterName, ChapterSchema, chapterName);
+
+        const data = await ChapterModel.find(); 
+
+        res.json(data.length ? data : { message: "No data found" });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+});
+
+router.post('/subtopic-details', async (req, res) => {
+    try {
+        const { topicName, subsection } = req.body;
+
+        if (!topicName || !subsection) {
+            return res.status(400).json({ message: "Missing topicName or subsection" });
+        }
+
+        const ChapterModel = mongoose.models[topicName] || 
+               mongoose.model(topicName, ChapterSchema, topicName);
+
+        const result = await ChapterModel.findOne({ "sections.title": subsection });
+
+        if (!result) {
+            return res.status(404).json({ message: "Subsection not found" });
+        }
+
+        res.json(result.sections.find(section => section.title === subsection).content ||
+            { message: "Subsection not found" });
+        
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
     }
