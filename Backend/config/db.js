@@ -2,8 +2,7 @@ import { Client } from 'pg';
 
 const connectDB = async () => {
     const client = new Client({
-        connectionString: process.env.PG_URI, // Set PG_URI in your .env file
-        // You can add more config options if needed
+        connectionString: process.env.PG_URI,
     });
 
     try {
